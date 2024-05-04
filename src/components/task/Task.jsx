@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import React, { useContext, useState } from "react";
 import { TaskDispatchContext } from "../../context/taskContext";
+import { TASK__TYPE } from "../../utils/variables";
 
 export function Task({ task }) {
   const dispatch = useContext(TaskDispatchContext);
@@ -21,7 +22,7 @@ export function Task({ task }) {
           checked={task.done}
           onChange={(event) => {
             dispatch({
-              type: "changed",
+              type: TASK__TYPE.changed,
               task: {
                 ...task,
                 done: event.target.checked,
@@ -37,7 +38,7 @@ export function Task({ task }) {
             label={"Редактирование задачи"}
             onChange={(event) => {
               dispatch({
-                type: "changed",
+                type: TASK__TYPE.changed,
                 task: {
                   ...task,
                   name: event.target.value,
@@ -65,7 +66,7 @@ export function Task({ task }) {
         <IconButton
           onClick={() =>
             dispatch({
-              type: "delete",
+              type: TASK__TYPE.delete,
               id: task.id,
             })
           }

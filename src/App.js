@@ -1,37 +1,39 @@
 import React, { useReducer } from "react";
 import AddTask from "./components/addTask/AddTask";
 import { Container, Typography } from "@mui/material";
-import { ListTask } from "./components/listTask/ListTask";
 import { TaskContext, TaskDispatchContext } from "./context/taskContext";
-import { ListTaskDone } from "./components/listTaskDone/ListTaskDone";
+import { Task } from "./components/task/Task";
+import { doneTask, inProgressTask } from "./utils/variables";
 
 export default function App() {
-  const data = [];
+  const defaultArray = [];
+  const initalStorage =
+    JSON.parse(localStorage.getItem("tasks")) || defaultArray;
 
-  const [tasks, dispatch] = useReducer(tasksReducer, data);
+  const [tasks, dispatch] = useReducer(tasksReducer, initalStorage);
 
-  function inProgressTask() {
-    return tasks.filter((task) => !task.done).length;
-  }
-
-  function doneTask() {
-    return tasks.filter((task) => task.done).length;
-  }
   return (
     <Container>
       <TaskContext.Provider value={tasks}>
         <TaskDispatchContext.Provider value={dispatch}>
           <AddTask />
-          {inProgressTask() ? (
-            <Typography variant={"h5"}>План ({inProgressTask()})</Typography>
+          {inProgressTask(tasks) ? (
+            <Typography variant={"h5"}>
+              План ({inProgressTask(tasks)})
+            </Typography>
           ) : null}
 
-          <ListTask />
+          {tasks.map((task) =>
+            !task.done ? <Task key={task.id} task={task} /> : null
+          )}
 
-          {doneTask() ? (
-            <Typography variant={"h5"}>Готово ({doneTask()})</Typography>
+          {doneTask(tasks) ? (
+            <Typography variant={"h5"}>Готово ({doneTask(tasks)})</Typography>
           ) : null}
-          <ListTaskDone />
+
+          {tasks.map((task) =>
+            task.done ? <Task key={task.id} task={task} /> : null
+          )}
         </TaskDispatchContext.Provider>
       </TaskContext.Provider>
     </Container>
@@ -39,21 +41,29 @@ export default function App() {
 }
 
 function tasksReducer(tasks, action) {
+  const id = Math.floor(Math.random() * 812);
+
   switch (action.type) {
     case "added": {
-      return [...tasks, { id: Math.random(), name: action.name, done: false }];
+      const newTask = [...tasks, { id: id, name: action.name, done: false }];
+      localStorage.setItem("tasks", JSON.stringify(newTask));
+      return newTask;
     }
     case "delete": {
-      return tasks.filter((task) => task.id !== action.id);
+      const filteredTask = tasks.filter((task) => task.id !== action.id);
+      localStorage.setItem("tasks", JSON.stringify(filteredTask));
+      return filteredTask;
     }
     case "changed": {
-      return tasks.map((task) => {
-        if (task.id === action.task.id) {
-          return action.task;
-        } else {
-          return task;
-        }
-      });
+      const findIndex = tasks.findIndex((task) => task.id === action.task.id);
+
+      if (findIndex !== -1) {
+        const updateTask = [...tasks];
+        updateTask[findIndex] = action.task;
+        localStorage.setItem("tasks", JSON.stringify(updateTask));
+        return updateTask;
+      }
+      return;
     }
     default: {
       console.log("Unknow action.type...");
